@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\Users\AuthController;
+use App\Http\Controllers\Api\Users\EditProfileController;
+use App\Http\Controllers\Api\Home\HomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -37,6 +39,11 @@ Route::group(['namespace' => 'Api','middleware'=>'checkLang'], function () {
        Route::post('user/getAllWishlist',[WishlistController::class,'getAllWishlist'])->middleware('checkUser:user-api');
     //    Route::post('user/login',[AuthController::class, 'GetAllClients']);
      });
+     Route::group(['namespace' => 'Home'], function () {
+      Route::get('home',[HomeController::class,'home']);
+  
+    
+   });
     
 
 
