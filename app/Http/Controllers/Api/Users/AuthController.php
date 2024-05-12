@@ -23,7 +23,16 @@ class AuthController extends Controller
 
     public function Register(Request $request)
     {
-    
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|unique:users|max:255',
+            'phone' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => $validator->errors()->first()]);
+        }
 
         // Generate a random code for the user
         $code = mt_rand(100000, 999999);
@@ -85,6 +94,7 @@ class AuthController extends Controller
 
     public function getUserData()
     {
+        $user = Patient::where('id', Auth::guard('user-api')->user()->id)->first();
         $user = User::where('id', Auth::guard('user-api')->user()->id)->first();
         return Response::json(array(
             'data' => $user,
