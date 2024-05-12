@@ -16,91 +16,55 @@ class EditProfileController extends Controller
 {
     public function Editprofile(Request $request)
     {
-
-            $validator = Validator::make($request->all(),[
-               'name'=>'nullable',
-                'phone'=>'nullable',
-                'email' => 'required|unique:patients,email,'.auth('user-api')->user()->id,
-            ]
-        ,[
-            'name.required'=>trans('editProfile.nameRequired'),
-            'name.string'=>trans('editProfile.nameString'),
-            'phone.required'=>trans('editProfile.phoneRequired'),
-            'photo.required'=>trans('editProfile.photoRequired'),
-            'photo.image'=>trans('editProfile.photoImage'),
-            'email.required'=>trans('editProfile.emailRequired'),
-            'email.unique'=>trans('editProfile.emailUnique'),
-
-        ]);
-        if ($validator->fails()) {
-            return response()->json([
-                'message'=>$validator->errors()->first()
-            ]);
-        }
-
-        try {
-            $user=Patient::where('id',Auth::guard('user-api')->user()->id)->first();
-            DB::beginTransaction();
-                $name=$user->photo;
-                
-                if($request->hasFile('photo'))
-                    {
-
-                    $photo=$request->file('photo');
-                    $ext=$photo->getClientOriginalName();
-                    $name="user-".uniqid().".$ext";
-                    $photo->move(public_path('images/users'),$name);
-                    }
-
-                        $users= Patient::where('id',auth('user-api')->user()->id)->update([
-                        'email' => $request->email,
-                        'name'=>$request->name,
-                        'phone'=>$request->phone,
-                        'photo'=>$name,
-                      
-                        ]);
-                        DB::commit();
-                        return Response::json(array(
-                        'message'=>trans('msg.updateSuccess'),
-                        ));
-                    }
-                catch (\Exception $ex) {
-                DB::rollback();
-                return $this->returnError($ex->getCode(), $ex->getMessage());
-            }
-    }
-    public function change_password(Request $request)
-    {
         $validator = Validator::make($request->all(), [
-            'old_password'=>'required',
-            'password'=>'required|min:6|max:100',
-            'confirm_password'=>'required|same:password'
-        ],[
-
-            'password.required' =>trans('editProfile.passwordRequired'),
-            'confirm_password.required'=>trans('editProfile.confirm_passwordRequired'),
-            'confirm_password.same'=>trans('editProfile.confirm_passwordSame'),
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' .Auth::guard('user-api')->user()->id, // Exclude current user's email from unique check
+            'phone' => 'required|string|max:255',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+    
         if ($validator->fails()) {
-            return response()->json([
-                'message'=>$validator->errors()->first()
-            ]);
+            return response()->json(['message' => $validator->errors()->first()], 422);
         }
-        $user=Auth::guard('user-api')->user();
-        if(Hash::check($request->old_password,$user->password)){
-            Patient::findOrfail(Auth::guard('user-api')->user()->id)->update([
-                'password'=>Hash::make($request->password)
-            ]);
-            return response()->json([
-                'message'=>trans('msg.pwSuccess'),
-            ],200);
-        }else
-        {
-            return response()->json([
-                'message'=>trans('msg.pwError'),
-            ],400);
+    
+     
+    
+    $user = Auth::guard('user-api')->user();
+    
+        $image = $user->image; // Default to current image
+        if ($request->hasFile('image')) {
+            $photo = $request->file('image');
+            $ext = $photo->getClientOriginalName();
+            $image = "image" . uniqid() . ".$ext";
+            $photo->move(public_path('images/users'), $image);
         }
-
+    
+        try {
+            DB::beginTransaction();
+    
+            // Update the user record
+            $user->update([
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'image' => $image, // Use the image variable
+              
+            ]);
+    
+      
+    
+            DB::commit();
+    
+            return response()->json([
+                'message' => trans('auth.update.success'),
+                'user' => $user,
+            ]);
+        } catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['message' => $ex->getMessage()], 500);
+        }
+           
     }
+ 
  
 }
