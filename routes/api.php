@@ -1,9 +1,12 @@
 <?php
 
+use App\Http\Controllers\Api\Booking\BookController;
+use App\Http\Controllers\Api\Home\BusesController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\Users\AuthController;
 use App\Http\Controllers\Api\Users\EditProfileController;
 use App\Http\Controllers\Api\Home\HomeController;
+use App\Http\Controllers\Api\Home\LinesController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -41,8 +44,15 @@ Route::group(['namespace' => 'Api','middleware'=>'checkLang'], function () {
      });
      Route::group(['namespace' => 'Home'], function () {
       Route::get('home',[HomeController::class,'home']);
-  
+      Route::post('line/by/category/id', [LinesController::class, 'get_lines_by_categoryid']);
+      Route::post('buses/by/line/id', [BusesController::class, 'get_buses_by_line_id']);
+      Route::post('seats/by/buses/id', [BusesController::class, 'get_seats_of_bus']);
     
+   });
+   Route::group(['namespace' => 'Booking'], function () {
+      
+      Route::post('user/book', [BookController::class, 'book'])->middleware('checkUser:user-api');
+     
    });
     
 
