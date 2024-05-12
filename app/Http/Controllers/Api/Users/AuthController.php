@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Api\Users;
+
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Support\Str;
@@ -31,7 +32,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['message' => $validator->errors()->first()]);
+            return response()->json(['message' => $validator->errors()->first()], 422);
         }
 
         // Generate a random code for the user
@@ -62,6 +63,7 @@ class AuthController extends Controller
                 'user_id' => $user->id,
                 'amount' => 0,
             ]);
+            $value = $this->get_device($user->id, $request->device_token);
             DB::commit();
 
             return response()->json([
@@ -94,6 +96,7 @@ class AuthController extends Controller
 
     public function getUserData()
     {
+
         $user = User::where('id', Auth::guard('user-api')->user()->id)->first();
         return Response::json(array(
             'data' => $user,
@@ -111,7 +114,7 @@ class AuthController extends Controller
             'email.exists' => trans('auth.login.exists')
         ]);
         if ($validator->fails()) {
-            return response()->json(['message' => $validator->errors()->first(), 'status' => 422]);
+            return response()->json(['message' => $validator->errors()->first()], 422);
         }
         $user = User::where('email', $request->email)->first();
 
@@ -158,6 +161,7 @@ class AuthController extends Controller
         if ($request->code === $user->code) {
 
             $token = auth()->guard('user-api')->login($user);
+            $value = $this->get_device($user->id, $request->device_token);
             return $this->respondWithToken($token);
         } else {
             // Code doesn't match, return an error message
@@ -202,4 +206,13 @@ class AuthController extends Controller
             'message' => 'success',
         ]);
     }
+    public function get_device($user_id, $device_code)
+    {
+        user::where('id',$user_id)->update([
+            'device_code' => $device_code
+        ]);
+        return 1;
+            
+            
+        }
 }

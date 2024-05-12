@@ -12,9 +12,11 @@ class HomeController extends Controller
 {
     public function home()
     {
-        $categories=Category::select('id','icon','name_'.app()->getLocale() .' as name')->paginate(8);
-        $lines=Line::select('id','time','money','destination','route','category_id')->paginate(8);
-        $buses=Bus::select('id','color','number','name_'.app()->getLocale() .' as name')->paginate(8);
+        $categories=Category::select('id','icon','name_'.app()->getLocale() .' as name', 'created_at','updated_at')->paginate(8);
+        $lines=Line::select('id','start_time', 'end_time', 'money', 'destination_' . app()->getLocale() . ' as destination', 'route_' . app()->getLocale() . ' as route','category_id', 'created_at', 'updated_at')->with(['linestations' => function ($query) {
+            $query->select('id', 'line_id', 'bus_id', 'name_' . app()->getLocale() . ' as name','time', 'created_at', 'updated_at'); 
+        }])->paginate(8);
+        $buses=Bus::select('id','color','number','name_'.app()->getLocale() .' as name', 'created_at', 'updated_at')->paginate(8);
         return Response::json(array(
             'status'=>200,
             'categories'=>$categories,
@@ -23,8 +25,6 @@ class HomeController extends Controller
             ));
 
     }
-    public function get_lines_by_categoryid(Request $request)
-    {
-    $lines=Line::where('category_id',$request->categor_id)->select('id','time','money','destination','route','category_id')->paginate(8);
-    }
+   
+
 }

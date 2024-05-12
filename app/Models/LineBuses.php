@@ -7,5 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class LineBuses extends Model
 {
+    protected $guarded = [];
     use HasFactory;
+    public function buses()
+    {
+        return $this->belongsTo(Bus::class, 'bus_id');
+    }
 }
