@@ -13,12 +13,11 @@ class BusesController extends Controller
     //
     public function get_buses_by_line_id(Request $request)
     {
-        return $buses = LineBuses::where('line_id', $request->line_id)->with(['buses' => function ($query) {
+         $buses = LineBuses::where('line_id', $request->line_id)->with(['buses' => function ($query) {
             $query->select('id', 'color', 'number', 'name_' . app()->getLocale() . ' as name', 'created_at', 'updated_at');
         }])->get();
         return Response::json(array(
-            'status' => 200,
-            'buses' =>  $buses,
+            'data' =>  $buses,
         ));
     }
     public function get_seats_of_bus(Request $request)
@@ -27,8 +26,7 @@ class BusesController extends Controller
             $query->select('id', 'color', 'number', 'name_' . app()->getLocale() . ' as name', 'created_at', 'updated_at');
         },'seats'])->get();
         return Response::json(array(
-            'status' => 200,
-            'lines' =>  $bus_seates,
+            'data' =>  $bus_seates,
         ));
     }
 }

@@ -16,9 +16,8 @@ class LinesController extends Controller
             $query->select('id', 'line_id', 'bus_id', 'name_' . app()->getLocale() . ' as name', 'time', 'created_at', 'updated_at');
         }])->paginate(8);
         return Response::json(array(
-            'status' => 200,
-            'lines' => $lines,
+            'data' => $lines,
         ));
     }
-    
+
 }
