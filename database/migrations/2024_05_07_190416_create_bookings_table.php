@@ -23,7 +23,7 @@ return new class extends Migration
             $table->foreign('bus_seat_id')->references('id')->on('bus_seats')->onDelete('cascade');
             $table->bigInteger('line_station_id')->unsigned();
             $table->foreign('line_station_id')->references('id')->on('line_stations')->onDelete('cascade');
-
+            $table->text('qr_code');
             $table->timestamps();
         });
     }

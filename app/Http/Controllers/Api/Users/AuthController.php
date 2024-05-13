@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\Api\Users;
 
+use App\Mail\AuthMail;
 use App\Models\User;
 use App\Models\Wallet;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use App\Models\Notification;
 use Illuminate\Http\Request;
@@ -65,10 +68,12 @@ class AuthController extends Controller
             ]);
             $value = $this->get_device($user->id, $request->device_token);
             DB::commit();
-
+            dispatch(function () use ($user, $code) {
+                Mail::to($user->email)->send(new AuthMail($code));
+            })->afterResponse(); // Dispatch after sending the response
             return response()->json([
                 'message' => trans('auth.register.success'),
-                'user' => $user,
+                'data' => $user,
             ]);
         } catch (\Exception $ex) {
             DB::rollback();
@@ -96,7 +101,6 @@ class AuthController extends Controller
 
     public function getUserData()
     {
-
         $user = User::where('id', Auth::guard('user-api')->user()->id)->first();
         return Response::json(array(
             'data' => $user,
@@ -113,29 +117,33 @@ class AuthController extends Controller
 
             'email.exists' => trans('auth.login.exists')
         ]);
+
         if ($validator->fails()) {
             return response()->json(['message' => $validator->errors()->first()], 422);
         }
+
         $user = User::where('email', $request->email)->first();
 
         // Check if the user exists
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
+
         $code = mt_rand(100000, 999999);
 
         // Update the code in the database
         $user->code = $code;
         $user->save();
-        // Mail::to($user->email)->send(new CodeMail($code));
+        dispatch(function () use ($user, $code) {
+            Mail::to($user->email)->send(new AuthMail($code));
+        })->afterResponse(); // Dispatch after sending the response
+        // Return the response immediately
         return response()->json([
-
             'message' => trans('mail send successfully'),
-            'code' => $code
-
+            'data' => $code
         ]);
+        // Queue the email sending process with a delay of 1 second
     }
-
     public function check_code(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -157,9 +165,13 @@ class AuthController extends Controller
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
+        $timeLimit = $user->updated_at->addMinutes(2); // Add 2 minutes to the updated_at timestamp
 
+        // Check if the current time exceeds the time limit
+        if (Carbon::now()->gt($timeLimit)) {
+            return response()->json(['message' => 'Time limit exceeded'], 400);
+        }
         if ($request->code === $user->code) {
-
             $token = auth()->guard('user-api')->login($user);
             $value = $this->get_device($user->id, $request->device_token);
             return $this->respondWithToken($token);
@@ -173,9 +185,8 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'status' => 200,
             'message' => trans('auth.login.success'),
-            'user' => Auth::guard('user-api')->user(),
+            'data' => Auth::guard('user-api')->user(),
         ]);
     }
 
@@ -212,7 +223,7 @@ class AuthController extends Controller
             'device_code' => $device_code
         ]);
         return 1;
-            
-            
+
+
         }
 }
