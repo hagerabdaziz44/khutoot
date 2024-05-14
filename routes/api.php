@@ -49,5 +49,6 @@ Route::group(['namespace' => 'Api', 'middleware' => 'checkLang'], function () {
    Route::group(['namespace' => 'Booking'], function () {
 
       Route::post('user/book', [BookController::class, 'book'])->middleware('checkUser:user-api');
+      Route::post('user/booking/list', [BookController::class, 'get_all_my_booking_list'])->middleware('checkUser:user-api');
    });
 });
