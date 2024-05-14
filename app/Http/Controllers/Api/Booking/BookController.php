@@ -50,9 +50,8 @@ class BookController extends Controller
             DB::commit();
 
             return response()->json([
-                'bookings'=>$booking,
+                'data'=> $booking,
                 'message' => trans('Added successfully'),
-
             ]);
         } catch (\Exception $ex) {
             DB::rollback();
@@ -62,7 +61,7 @@ class BookController extends Controller
     public function get_all_my_booking_list()
     {
         $user = Auth::guard('user-api')->user();
-       $booking=Booking::where('user_id', $user->id)->with(['linestations' => function ($query) {
+        $booking=Booking::where('user_id', $user->id)->with(['linestations' => function ($query) {
             $query->select('id', 'line_id', 'bus_id', 'name_' . app()->getLocale() . ' as name', 'time', 'created_at', 'updated_at');
         }, 'line' => function ($query) {
             $query->select('id', 'start_time', 'end_time', 'money', 'destination_' . app()->getLocale() . ' as destination', 'route_' . app()->getLocale() . ' as route', 'category_id', 'created_at', 'updated_at');
@@ -70,8 +69,7 @@ class BookController extends Controller
             $query->with('seats');
         }])->get();
         return response()->json([
-            'bookings' => $booking,
-            
+            'data' => $booking,
         ]);
 
     }
