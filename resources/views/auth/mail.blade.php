@@ -27,7 +27,7 @@
             <div class="login100-pic js-tilt" data-tilt>
 
             </div>
-            <h1>Welcome Fayez App</h1>
+            <h1>Welcome App</h1>
         </div>
         <div class="alert alert-danger">
             <h2>We have received your request to Login </h2>

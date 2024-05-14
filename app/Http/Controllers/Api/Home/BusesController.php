@@ -13,7 +13,7 @@ class BusesController extends Controller
     //
     public function get_buses_by_line_id(Request $request)
     {
-         $buses = LineBuses::where('line_id', $request->line_id)->with(['buses' => function ($query) {
+       $buses = LineBuses::where('line_id', $request->line_id)->with(['buses' => function ($query) {
             $query->select('id', 'color', 'number', 'name_' . app()->getLocale() . ' as name', 'created_at', 'updated_at');
         }])->get();
         return Response::json(array(
